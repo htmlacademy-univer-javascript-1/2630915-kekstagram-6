@@ -1,12 +1,8 @@
-// js/effects.js
-
-// ---------- Константы масштаба ----------
 const SCALE_STEP = 25;
 const SCALE_MIN = 25;
 const SCALE_MAX = 100;
 const DEFAULT_SCALE = 100;
 
-// ---------- Константы эффектов ----------
 const Effects = {
   none: {
     name: 'none',
@@ -61,20 +57,16 @@ const Effects = {
 const uploadForm = document.querySelector('.img-upload__form');
 const imgPreview = uploadForm.querySelector('.img-upload__preview img');
 
-// элементы масштаба
 const scaleSmallerButton = uploadForm.querySelector('.scale__control--smaller');
 const scaleBiggerButton = uploadForm.querySelector('.scale__control--bigger');
 const scaleValueField = uploadForm.querySelector('.scale__control--value');
 
-// элементы эффектов
 const effectsList = uploadForm.querySelector('.effects__list');
 const effectLevelContainer = uploadForm.querySelector('.img-upload__effect-level');
 const effectLevelSlider = uploadForm.querySelector('.effect-level__slider');
 const effectLevelValue = uploadForm.querySelector('.effect-level__value');
 
 let currentEffect = Effects.none;
-
-// ---------- Масштаб ----------
 
 const setScale = (value) => {
   const clampedValue = Math.min(Math.max(value, SCALE_MIN), SCALE_MAX);
@@ -92,13 +84,10 @@ const onScaleBiggerClick = () => {
   setScale(currentValue + SCALE_STEP);
 };
 
-// ---------- Эффекты + noUiSlider ----------
-
 const isDefaultEffect = () => currentEffect === Effects.none;
 
 const updateSliderOptions = () => {
   if (isDefaultEffect()) {
-    // для оригинала скрываем слайдер и убираем фильтр
     effectLevelContainer.classList.add('hidden');
     imgPreview.style.filter = 'none';
     effectLevelValue.value = '';
@@ -117,7 +106,6 @@ const updateSliderOptions = () => {
   });
 };
 
-// создание слайдера
 noUiSlider.create(effectLevelSlider, {
   range: {
     min: Effects.none.min,
@@ -128,7 +116,6 @@ noUiSlider.create(effectLevelSlider, {
   connect: 'lower',
 });
 
-// при изменении значения слайдера
 effectLevelSlider.noUiSlider.on('update', (values, handle) => {
   const value = values[handle];
   effectLevelValue.value = value;
@@ -142,7 +129,6 @@ effectLevelSlider.noUiSlider.on('update', (values, handle) => {
   imgPreview.style.filter = `${style}(${value}${unit})`;
 });
 
-// переключение эффектов (радиокнопки)
 const onEffectsListChange = (evt) => {
   if (!evt.target.classList.contains('effects__radio')) {
     return;
@@ -153,8 +139,6 @@ const onEffectsListChange = (evt) => {
   updateSliderOptions();
 };
 
-// ---------- Сброс при открытии/закрытии формы ----------
-
 const resetEffects = () => {
   currentEffect = Effects.none;
   updateSliderOptions();
@@ -164,19 +148,15 @@ const resetScale = () => {
   setScale(DEFAULT_SCALE);
 };
 
-// при сбросе формы (uploadForm.reset() в form.js) обнуляем состояние
 uploadForm.addEventListener('reset', () => {
   resetScale();
   resetEffects();
 });
 
-// ---------- Навешиваем обработчики ----------
-
 scaleSmallerButton.addEventListener('click', onScaleSmallerClick);
 scaleBiggerButton.addEventListener('click', onScaleBiggerClick);
 effectsList.addEventListener('change', onEffectsListChange);
 
-// начальное состояние
 resetScale();
 resetEffects();
 
