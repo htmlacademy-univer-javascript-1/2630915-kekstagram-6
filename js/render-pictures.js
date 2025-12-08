@@ -1,20 +1,15 @@
 import { openBigPicture } from './big-picture.js';
 
 const picturesContainer = document.querySelector('.pictures');
-const pictureTemplate = document.querySelector('#picture')
-  .content
-  .querySelector('.picture');
-
+const pictureTemplate = document.querySelector('#picture').content.querySelector('.picture');
 const fragment = document.createDocumentFragment();
 
 const createThumbnail = (picture) => {
   const { url, description, likes, comments } = picture;
   const pictureElement = pictureTemplate.cloneNode(true);
 
-  const img = pictureElement.querySelector('.picture__img');
-  img.src = url;
-  img.alt = description;
-
+  pictureElement.querySelector('.picture__img').src = url;
+  pictureElement.querySelector('.picture__img').alt = description;
   pictureElement.querySelector('.picture__likes').textContent = likes;
   pictureElement.querySelector('.picture__comments').textContent = comments.length;
 
