@@ -1,3 +1,5 @@
+import { sendData } from './api.js';
+
 const COMMENT_MAX_LENGTH = 140;
 const HASHTAG_MAX_COUNT = 5;
 const HASHTAG_REGEXP = /^#[A-Za-zА-Яа-яЁё0-9]{1,19}$/;
@@ -9,6 +11,8 @@ const overlay = uploadForm.querySelector('.img-upload__overlay');
 const cancelButton = uploadForm.querySelector('.img-upload__cancel');
 const hashtagsField = uploadForm.querySelector('.text__hashtags');
 const commentField = uploadForm.querySelector('.text__description');
+const submitButton = uploadForm.querySelector('.img-upload__submit');
+const submitButtonText = submitButton.textContent;
 
 const pristine = new Pristine(uploadForm, {
   classTo: 'img-upload__field-wrapper',
@@ -18,6 +22,26 @@ const pristine = new Pristine(uploadForm, {
   errorTextTag: 'div',
   errorTextClass: 'img-upload__error',
 });
+
+const successTemplate = document
+  .querySelector('#success')
+  .content
+  .querySelector('.success');
+
+const errorTemplate = document
+  .querySelector('#error')
+  .content
+  .querySelector('.error');
+
+const blockSubmitButton = () => {
+  submitButton.disabled = true;
+  submitButton.textContent = 'Публикую...';
+};
+
+const unblockSubmitButton = () => {
+  submitButton.disabled = false;
+  submitButton.textContent = submitButtonText;
+};
 
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape') {
@@ -36,7 +60,6 @@ function closeUploadOverlay() {
   overlay.classList.add('hidden');
   body.classList.remove('modal-open');
   document.removeEventListener('keydown', onDocumentKeydown);
-
   uploadForm.reset();
   pristine.reset();
   fileField.value = '';
@@ -111,12 +134,89 @@ pristine.addValidator(
   `Длина комментария не может быть больше ${COMMENT_MAX_LENGTH} символов`
 );
 
+function showSuccessMessage() {
+  const successElement = successTemplate.cloneNode(true);
+  document.body.append(successElement);
+
+  const successButton = successElement.querySelector('.success__button');
+
+  function closeSuccess() {
+    successElement.remove();
+    document.removeEventListener('keydown', onEscKeydown);
+    successElement.removeEventListener('click', onOutsideClick);
+  }
+
+  function onEscKeydown(evt) {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      evt.stopImmediatePropagation();
+      closeSuccess();
+    }
+  }
+
+  function onOutsideClick(evt) {
+    if (!evt.target.closest('.success__inner')) {
+      closeSuccess();
+    }
+  }
+
+  successButton.addEventListener('click', closeSuccess);
+  document.addEventListener('keydown', onEscKeydown);
+  successElement.addEventListener('click', onOutsideClick);
+}
+
+function showErrorMessage() {
+  const errorElement = errorTemplate.cloneNode(true);
+  document.body.append(errorElement);
+
+  const errorButton = errorElement.querySelector('.error__button');
+
+  function closeError() {
+    errorElement.remove();
+    document.removeEventListener('keydown', onEscKeydown);
+    errorElement.removeEventListener('click', onOutsideClick);
+  }
+
+  function onEscKeydown(evt) {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      evt.stopImmediatePropagation();
+      closeError();
+    }
+  }
+
+  function onOutsideClick(evt) {
+    if (!evt.target.closest('.error__inner')) {
+      closeError();
+    }
+  }
+
+  errorButton.addEventListener('click', closeError);
+  document.addEventListener('keydown', onEscKeydown);
+  errorElement.addEventListener('click', onOutsideClick);
+}
+
 uploadForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+
   const isValid = pristine.validate();
 
   if (!isValid) {
-    evt.preventDefault();
+    return;
   }
-});
 
-export { };
+  const formData = new FormData(uploadForm);
+
+  blockSubmitButton();
+
+  sendData(formData)
+    .then(() => {
+      unblockSubmitButton();
+      closeUploadOverlay();
+      showSuccessMessage();
+    })
+    .catch(() => {
+      unblockSubmitButton();
+      showErrorMessage();
+    });
+});
