@@ -3,6 +3,7 @@ import { sendData } from './api.js';
 const COMMENT_MAX_LENGTH = 140;
 const HASHTAG_MAX_COUNT = 5;
 const HASHTAG_REGEXP = /^#[A-Za-zА-Яа-яЁё0-9]{1,19}$/;
+const FILE_TYPES = ['jpg', 'jpeg', 'png'];
 
 const body = document.body;
 const uploadForm = document.querySelector('.img-upload__form');
@@ -13,6 +14,10 @@ const hashtagsField = uploadForm.querySelector('.text__hashtags');
 const commentField = uploadForm.querySelector('.text__description');
 const submitButton = uploadForm.querySelector('.img-upload__submit');
 const submitButtonText = submitButton.textContent;
+
+const imgPreview = uploadForm.querySelector('.img-upload__preview img');
+const effectsPreview = uploadForm.querySelectorAll('.effects__preview');
+const defaultPreviewSrc = imgPreview.src;
 
 const pristine = new Pristine(uploadForm, {
   classTo: 'img-upload__field-wrapper',
@@ -63,9 +68,28 @@ function closeUploadOverlay() {
   uploadForm.reset();
   pristine.reset();
   fileField.value = '';
+  imgPreview.src = defaultPreviewSrc;
+  effectsPreview.forEach((preview) => {
+    preview.style.backgroundImage = '';
+  });
 }
 
 fileField.addEventListener('change', () => {
+  const file = fileField.files[0];
+
+  if (file) {
+    const fileName = file.name.toLowerCase();
+    const matches = FILE_TYPES.some((ext) => fileName.endsWith(ext));
+
+    if (matches) {
+      const imageUrl = URL.createObjectURL(file);
+      imgPreview.src = imageUrl;
+      effectsPreview.forEach((preview) => {
+        preview.style.backgroundImage = `url(${imageUrl})`;
+      });
+    }
+  }
+
   openUploadOverlay();
 });
 
