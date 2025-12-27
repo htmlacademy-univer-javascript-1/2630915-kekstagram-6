@@ -3,10 +3,12 @@ import './form.js';
 import './effects.js';
 import { getData } from './api.js';
 import { renderPhotos } from './render-pictures.js';
+import { initFilters } from './filters.js';
 
 getData()
   .then((photos) => {
     renderPhotos(photos);
+    initFilters(photos);
   })
   .catch(() => {
     const errorBlock = document.createElement('div');
