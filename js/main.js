@@ -12,6 +12,9 @@ getData()
   })
   .catch(() => {
     const errorBlock = document.createElement('div');
+
+    errorBlock.classList.add('data-error');
+
     errorBlock.textContent = 'Не удалось загрузить фотографии. Попробуйте обновить страницу.';
     errorBlock.style.position = 'fixed';
     errorBlock.style.left = '0';

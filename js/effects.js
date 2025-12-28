@@ -117,7 +117,7 @@ noUiSlider.create(effectLevelSlider, {
 });
 
 effectLevelSlider.noUiSlider.on('update', (values, handle) => {
-  const value = values[handle];
+  const value = Number(values[handle]);       // <-- вот это важно
   effectLevelValue.value = value;
 
   if (isDefaultEffect()) {
