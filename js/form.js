@@ -50,10 +50,15 @@ const unblockSubmitButton = () => {
 
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape') {
+    if (document.querySelector('.error')) {
+      return;
+    }
+
     evt.preventDefault();
     closeUploadOverlay();
   }
 };
+
 
 const openUploadOverlay = () => {
   overlay.classList.remove('hidden');
@@ -191,6 +196,7 @@ function showSuccessMessage() {
 
 function showErrorMessage() {
   const errorElement = errorTemplate.cloneNode(true);
+  overlay.classList.add('hidden');
   document.body.append(errorElement);
 
   const errorButton = errorElement.querySelector('.error__button');
@@ -199,6 +205,7 @@ function showErrorMessage() {
     errorElement.remove();
     document.removeEventListener('keydown', onEscKeydown);
     errorElement.removeEventListener('click', onOutsideClick);
+    overlay.classList.remove('hidden');
   }
 
   function onEscKeydown(evt) {

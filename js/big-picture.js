@@ -14,12 +14,43 @@ const closeButton = bigPicture.querySelector('.big-picture__cancel');
 let allComments = [];
 let shownCommentsCount = 0;
 
+
+let commentsShownCount = null;
+let commentsTotalCount = null;
+
+if (commentsCountBlock) {
+  commentsShownCount = commentsCountBlock.querySelector('.social__comment-shown-count');
+  commentsTotalCount = commentsCountBlock.querySelector('.social__comment-total-count');
+
+  if (!commentsShownCount || !commentsTotalCount) {
+    commentsCountBlock.innerHTML = '';
+
+    commentsShownCount = document.createElement('span');
+    commentsShownCount.classList.add('social__comment-shown-count');
+
+    commentsTotalCount = document.createElement('span');
+    commentsTotalCount.classList.add('social__comment-total-count');
+
+    commentsCountBlock.append(
+      commentsShownCount,
+      document.createTextNode(' из '),
+      commentsTotalCount,
+      document.createTextNode(' комментариев'),
+    );
+  }
+}
+
 const clearComments = () => {
   commentsList.innerHTML = '';
 };
 
 const updateCommentsCounter = () => {
-  commentsCountBlock.textContent = `${shownCommentsCount} из ${allComments.length} комментариев`;
+  if (commentsShownCount && commentsTotalCount) {
+    commentsShownCount.textContent = shownCommentsCount;
+    commentsTotalCount.textContent = allComments.length;
+  } else if (commentsCountBlock) {
+    commentsCountBlock.textContent = `${shownCommentsCount} из ${allComments.length} комментариев`;
+  }
 };
 
 const createCommentElement = (comment) => {
@@ -87,7 +118,9 @@ function openBigPicture(photo) {
   shownCommentsCount = 0;
   clearComments();
 
-  commentsCountBlock.classList.remove('hidden');
+  if (commentsCountBlock) {
+    commentsCountBlock.classList.remove('hidden');
+  }
   commentsLoader.classList.remove('hidden');
 
   renderNextComments();
