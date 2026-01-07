@@ -1,4 +1,6 @@
 import { sendData } from './api.js';
+import { isEscapeKey } from './keyboard.js';
+
 
 const COMMENT_MAX_LENGTH = 140;
 const HASHTAG_MAX_COUNT = 5;
@@ -48,17 +50,23 @@ const unblockSubmitButton = () => {
   submitButton.textContent = submitButtonText;
 };
 
-const onDocumentKeydown = (evt) => {
-  if (evt.key === 'Escape') {
-    if (document.querySelector('.error')) {
-      return;
-    }
-
-    evt.preventDefault();
-    closeUploadOverlay();
-  }
+const resetUploadPreview = () => {
+  imgPreview.src = defaultPreviewSrc;
+  effectsPreview.forEach((preview) => {
+    preview.style.backgroundImage = '';
+  });
 };
 
+const closeUploadOverlay = () => {
+  overlay.classList.add('hidden');
+  body.classList.remove('modal-open');
+  document.removeEventListener('keydown', onDocumentKeydown);
+
+  uploadForm.reset();
+  pristine.reset();
+  fileField.value = '';
+  resetUploadPreview();
+};
 
 const openUploadOverlay = () => {
   overlay.classList.remove('hidden');
@@ -66,20 +74,18 @@ const openUploadOverlay = () => {
   document.addEventListener('keydown', onDocumentKeydown);
 };
 
-function closeUploadOverlay() {
-  overlay.classList.add('hidden');
-  body.classList.remove('modal-open');
-  document.removeEventListener('keydown', onDocumentKeydown);
-  uploadForm.reset();
-  pristine.reset();
-  fileField.value = '';
-  imgPreview.src = defaultPreviewSrc;
-  effectsPreview.forEach((preview) => {
-    preview.style.backgroundImage = '';
-  });
+function onDocumentKeydown(evt) {
+  if (isEscapeKey(evt)) {
+    if (document.querySelector('.error')) {
+      return;
+    }
+
+    evt.preventDefault();
+    closeUploadOverlay();
+  }
 }
 
-fileField.addEventListener('change', () => {
+const onFileFieldChange = () => {
   const file = fileField.files[0];
 
   if (file) {
@@ -96,21 +102,18 @@ fileField.addEventListener('change', () => {
   }
 
   openUploadOverlay();
-});
+};
 
-cancelButton.addEventListener('click', (evt) => {
+const onCancelButtonClick = (evt) => {
   evt.preventDefault();
   closeUploadOverlay();
-});
+};
 
-const stopEscPropagation = (evt) => {
-  if (evt.key === 'Escape') {
+const onHashtagOrCommentKeydown = (evt) => {
+  if (isEscapeKey(evt)) {
     evt.stopPropagation();
   }
 };
-
-hashtagsField.addEventListener('keydown', stopEscPropagation);
-commentField.addEventListener('keydown', stopEscPropagation);
 
 const getHashtagsArray = (value) =>
   value
@@ -163,75 +166,77 @@ pristine.addValidator(
   `Длина комментария не может быть больше ${COMMENT_MAX_LENGTH} символов`
 );
 
-function showSuccessMessage() {
+const showSuccessMessage = () => {
   const successElement = successTemplate.cloneNode(true);
   document.body.append(successElement);
 
   const successButton = successElement.querySelector('.success__button');
 
-  function closeSuccess() {
+  const closeSuccessMessage = () => {
     successElement.remove();
-    document.removeEventListener('keydown', onEscKeydown);
-    successElement.removeEventListener('click', onOutsideClick);
-  }
+    document.removeEventListener('keydown', onSuccessMessageKeydown);
+    successElement.removeEventListener('click', onSuccessMessageOutsideClick);
+  };
 
-  function onEscKeydown(evt) {
-    if (evt.key === 'Escape') {
+  function onSuccessMessageKeydown(evt) {
+    if (isEscapeKey(evt)) {
       evt.preventDefault();
       evt.stopImmediatePropagation();
-      closeSuccess();
+      closeSuccessMessage();
     }
   }
 
-  function onOutsideClick(evt) {
+  function onSuccessMessageOutsideClick(evt) {
     if (!evt.target.closest('.success__inner')) {
-      closeSuccess();
+      closeSuccessMessage();
     }
   }
 
-  successButton.addEventListener('click', closeSuccess);
-  document.addEventListener('keydown', onEscKeydown);
-  successElement.addEventListener('click', onOutsideClick);
-}
+  successButton.addEventListener('click', closeSuccessMessage);
+  document.addEventListener('keydown', onSuccessMessageKeydown);
+  successElement.addEventListener('click', onSuccessMessageOutsideClick);
+};
 
-function showErrorMessage() {
+const showErrorMessage = () => {
   const errorElement = errorTemplate.cloneNode(true);
+
   overlay.classList.add('hidden');
+
   document.body.append(errorElement);
 
   const errorButton = errorElement.querySelector('.error__button');
 
-  function closeError() {
+  const closeErrorMessage = () => {
     errorElement.remove();
-    document.removeEventListener('keydown', onEscKeydown);
-    errorElement.removeEventListener('click', onOutsideClick);
-    overlay.classList.remove('hidden');
-  }
+    document.removeEventListener('keydown', onErrorMessageKeydown);
+    errorElement.removeEventListener('click', onErrorMessageOutsideClick);
 
-  function onEscKeydown(evt) {
-    if (evt.key === 'Escape') {
+    overlay.classList.remove('hidden');
+  };
+
+  function onErrorMessageKeydown(evt) {
+    if (isEscapeKey(evt)) {
       evt.preventDefault();
       evt.stopImmediatePropagation();
-      closeError();
+      closeErrorMessage();
     }
   }
 
-  function onOutsideClick(evt) {
+  function onErrorMessageOutsideClick(evt) {
     if (!evt.target.closest('.error__inner')) {
-      closeError();
+      closeErrorMessage();
     }
   }
 
-  errorButton.addEventListener('click', closeError);
-  document.addEventListener('keydown', onEscKeydown);
-  errorElement.addEventListener('click', onOutsideClick);
-}
+  errorButton.addEventListener('click', closeErrorMessage);
+  document.addEventListener('keydown', onErrorMessageKeydown);
+  errorElement.addEventListener('click', onErrorMessageOutsideClick);
+};
 
-uploadForm.addEventListener('submit', (evt) => {
+const onUploadFormSubmit = (evt) => {
   evt.preventDefault();
 
   const isValid = pristine.validate();
-
   if (!isValid) {
     return;
   }
@@ -250,4 +255,12 @@ uploadForm.addEventListener('submit', (evt) => {
       unblockSubmitButton();
       showErrorMessage();
     });
-});
+};
+
+fileField.addEventListener('change', onFileFieldChange);
+cancelButton.addEventListener('click', onCancelButtonClick);
+
+hashtagsField.addEventListener('keydown', onHashtagOrCommentKeydown);
+commentField.addEventListener('keydown', onHashtagOrCommentKeydown);
+
+uploadForm.addEventListener('submit', onUploadFormSubmit);

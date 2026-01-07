@@ -1,17 +1,19 @@
 import { renderPhotos } from './render-pictures.js';
 
 const RANDOM_PHOTOS_COUNT = 10;
+const DEBOUNCE_DELAY = 500;
+
 const imgFilters = document.querySelector('.img-filters');
 const filtersForm = imgFilters.querySelector('.img-filters__form');
 
-function debounce(callback, timeoutDelay = 500) {
+const debounce = (callback, timeoutDelay = DEBOUNCE_DELAY) => {
   let timeoutId;
 
   return (...rest) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
   };
-}
+};
 
 const clearPictures = () => {
   const pictureElements = document.querySelectorAll('.picture');

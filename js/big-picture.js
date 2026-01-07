@@ -1,3 +1,5 @@
+import { isEscapeKey } from './keyboard.js';
+
 const COMMENTS_PER_PORTION = 5;
 
 const body = document.body;
@@ -97,7 +99,7 @@ const renderNextComments = () => {
 };
 
 const onDocumentKeydown = (evt) => {
-  if (evt.key === 'Escape') {
+  if (isEscapeKey(evt)) {
     evt.preventDefault();
     closeBigPicture();
   }
